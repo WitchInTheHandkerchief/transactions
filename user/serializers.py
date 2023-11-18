@@ -1,5 +1,7 @@
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import serializers
+from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
 
 from user.models import User
 
@@ -16,3 +18,19 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user, _ = User.objects.get_or_create(**validated_data)
         return user
+
+
+class AuthenticateUserSerializer(serializers.Serializer):
+    token = serializers.CharField(read_only=True)
+    phone = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        fields = "__all__"
+
+    def create(self, validated_data):
+        user = User.objects.get(phone=validated_data.get("phone"))
+        if not check_password(validated_data.get("password"), user.password):
+            raise AuthenticationFailed()
+        token, _ = Token.objects.get_or_create(user=user)
+        return {"token": token.key}
