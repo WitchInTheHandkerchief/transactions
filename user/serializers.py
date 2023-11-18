@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
 from user.models import User
 
@@ -13,6 +13,9 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs["password"] = make_password(attrs["password"])
+        if not attrs["phone"].startswith(("99655", "99675", "99688", "99699", "99622", "996312", "99677", "99650",
+                                          "99670", "99660", "99667")):
+            raise ValidationError()
         return attrs
 
     def create(self, validated_data):
